@@ -1,0 +1,18 @@
+namespace :drupal do
+
+    desc 'launch drush make if project have make files, for profiles deployments see'
+    task :launch_make_file do
+      on release_roles :web do
+          within release_path do
+            drush_make_file_path = release_path.join( fetch(:drush_make_file))
+            if test "[ -f #{drush_make_file_path} ]"
+            drush_make_contrib_destination  = fetch(:drush_make_contrib_destination, ".")
+            execute :drush, "make --no-core", drush_make_file_path,  "--contrib-destination=#{drush_make_contrib_destination} -y"
+          end
+        end
+      end
+    end
+
+end
+
+after 'deploy:updated', 'drupal:launch_make_file'

@@ -1,0 +1,67 @@
+namespace :deploy do
+
+  namespace :check do
+    task :linked_files => 'docroot/sites/default/settings.php'
+    task :linked_files => 'docroot/.htaccess'
+    task :linked_files => 'docroot/robots.txt'
+
+    task :fix_permissions do
+      on release_roles(:all) do
+        settings_file = shared_path.join('docroot/sites/default/settings.php')
+        if test "[ -f #{settings_file} ]"
+          # FIXME: Only is necessary the first time
+          execute :chmod , 'ag+w', settings_file
+        end
+      end
+    end
+
+  end
+end
+
+namespace :db do
+
+  task :backup do
+    on release_roles(:app) do
+      within current_path.join('docroot') do
+        filename = release_path.join('backup.sql')
+        execute :drush, 'sql-dump >', filename
+      end
+    end
+  end
+
+  task :reverted do
+    on release_roles(:app) do
+      filename = release_path.join('backup.sql')
+      # FIXME: It's necessary make two  within processes to drop and import the database successfully
+      within current_path.join('docroot') do
+        execute :drush, 'sql-drop -y'
+      end
+      within current_path.join('docroot') do
+        execute :drush, 'sql-cli <', filename
+      end
+    end
+  end
+
+end
+
+after 'deploy:check:linked_files', 'deploy:check:fix_permissions'
+after "deploy:updated", "db:backup"
+after "deploy:reverted", "db:reverted"
+
+remote_file 'docroot/sites/default/settings.php' => '/tmp/settings.php', roles: :app
+remote_file 'docroot/.htaccess' => '/tmp/.htaccess', roles: :app
+remote_file 'docroot/robots.txt' => '/tmp/robots.txt', roles: :app
+
+file '/tmp/settings.php' do |t|
+  sh "curl -o #{t.name} http://drupalcode.org/project/drupal.git/blob_plain/refs/heads/7.x:/sites/default/default.settings.php && chmod 755 #{t.name}"
+end
+
+file '/tmp/.htaccess' do |t|
+  sh "curl -o #{t.name} http://drupalcode.org/project/drupal.git/blob_plain/refs/heads/7.x:/.htaccess"
+end
+
+file '/tmp/settings.php' do |t|
+  sh "curl -o #{t.name} http://drupalcode.org/project/drupal.git/blob_plain/refs/heads/7.x:/robots.txt"
+end
+
+
