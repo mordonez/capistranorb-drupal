@@ -14,5 +14,5 @@ set :repo_url, 'git@github.com:mordonez/drupal7.git'
  set :keep_releases, 5
 
 # relative path to make file
-set :drush_make_contrib_destination, "docroot/sites/all"
-set :drush_make_file, "docroot/profiles/web/web.make"
+set :drush_make_contrib_destination, 'docroot/profiles/web'
+set :drush_make_file, 'docroot/profiles/web/web.make'
