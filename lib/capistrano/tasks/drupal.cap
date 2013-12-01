@@ -1,17 +1,17 @@
 namespace :db do
 
   task :backup do
-    next unless any? :release_path
     on release_roles(:all) do
-      within current_path.join('docroot') do
-        filename = release_path.join('backup.sql')
-        execute :drush, 'sql-dump >', filename
+      if test "[ -f #{current_path} ]"
+        within current_path.join('docroot') do
+          filename = release_path.join('backup.sql')
+          execute :drush, 'sql-dump >', filename
+        end
       end
     end
   end
 
-  before 'deploy', 'db:backup'
-  before 'deploy:rollback', 'db:backup'
+  before 'deploy:started', 'db:backup'
 
   task :reverting do
     on release_roles(:all) do
@@ -61,10 +61,12 @@ namespace :drupal do
 
   task :build do
     on release_roles(:all) do
-      within release_path.join('docroot') do
-        execute :drush, 'updb -y'
-        execute :drush, 'fra -y --force'
-        execute :drush, 'cc all'
+      if test "[ -f #{current_path} ]"
+        within release_path.join('docroot') do
+          execute :drush, 'updb -y'
+          execute :drush, 'fra -y --force'
+          execute :drush, 'cc all'
+        end
       end
     end
   end

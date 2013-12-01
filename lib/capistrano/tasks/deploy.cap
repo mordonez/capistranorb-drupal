@@ -7,15 +7,16 @@ namespace :deploy do
 
     task :fix_permissions do
       on release_roles(:all) do
-        settings_file = shared_path.join('docroot/sites/default/settings.php')
-        if test "[ -f #{settings_file} ]"
-          # FIXME: Only is necessary the first time
-          execute :chmod , 'ag+w', settings_file
+        unless test "[ -f #{current_path} ]"
+          settings_file = shared_path.join('docroot/sites/default/settings.php')
+          if test "[ -f #{settings_file} ]"
+            execute :chmod , 'ag+w', settings_file
+          end
         end
       end
     end
 
-  after 'deploy:check:linked_files', 'deploy:check:fix_permissions'
+    after 'deploy:check:linked_files', 'deploy:check:fix_permissions'
   end
 
 end
@@ -35,5 +36,3 @@ end
 file '/tmp/settings.php' do |t|
   sh "curl -o #{t.name} http://drupalcode.org/project/drupal.git/blob_plain/refs/heads/7.x:/robots.txt"
 end
-
-
