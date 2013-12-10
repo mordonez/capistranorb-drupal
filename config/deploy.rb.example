@@ -5,6 +5,9 @@ set :repo_url, 'git@github.com:mordonez/drupal7.git'
 
 # set :default_env, { path: "/opt/ruby/bin:$PATH" }
 
+# absolute path where deploys.
+set :deploy_to, '/srv/www'
+
 #
 # Relative path to drupal's document root, leave empty if it's the same of git root folder.
 #
@@ -50,22 +53,19 @@ set :linked_dirs, [fetch(:linked_dirs_files), fetch(:linked_dirs_private)]
 set :keep_releases, 5
 
 #
-# Specify a  path to the drush make file, leave empty if not used
+# Specify a path to the drush make file, leave empty if not used
 #
 #set :drush_make_file, ''
 set :drush_make_file, 'docroot/profiles/web/web.make'
 
 #
-# Specify a path under which modules  and themes should be placed.
+# Specify a relative path under which modules  and themes should be placed.
 # defaults to sites/all for Drupal 6,7 and the corresponding directory in
 # the Drupal root for Drupal 8 and above. (Depends of :drush_make_file)
 # Leave empty if not used
 #
 #set :drush_make_contrib_destination, ''
-set :drush_make_contrib_destination, 'docroot/profiles/web'
-
-# absolute path where deploys.
-set :deploy_to, '/srv/www'
+set :drush_make_contrib_destination, 'profiles/web'
 
 #
 # Specify the drupal's version

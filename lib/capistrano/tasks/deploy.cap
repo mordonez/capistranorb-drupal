@@ -3,10 +3,14 @@ namespace :deploy do
 
     task :fix_permissions do
       on release_roles :all do
-        unless test "[ -f #{current_path} ]"
+        unless test "[ -d #{current_path} ]"
           settings_file = shared_path.join("#{fetch(:docroot)}").join("sites/default/settings.php")
+          files_dir = shared_path.join("#{fetch(:docroot)}").join("sites/default/files")
           if test "[ -f #{settings_file} ]"
             execute :chmod , 'ag+w', settings_file
+          end
+          if test "[ -d #{files_dir} ]"
+            execute :chmod , 'ag+w', files_dir
           end
         end
       end
