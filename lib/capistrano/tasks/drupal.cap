@@ -1,41 +1,8 @@
-namespace :db do
-
-  task :backup do
-    on release_roles(:all) do
-      if test "[ -f #{current_path} ]"
-        within current_path.join('docroot') do
-          filename = release_path.join('backup.sql')
-          execute :drush, 'sql-dump >', filename
-        end
-      end
-    end
-  end
-
-  before 'deploy:started', 'db:backup'
-
-  task :reverting do
-    on release_roles(:all) do
-      filename = release_path.join('backup.sql')
-      # FIXME: It's necessary make two  within processes to drop and import the database successfully
-      if test "[ -f #{filename} ]"
-        within current_path.join('docroot') do
-          execute :drush, 'sql-drop -y'
-        end
-        within current_path.join('docroot') do
-          execute :drush, 'sql-cli <', filename
-        end
-      end
-    end
-  end
-  after "deploy:finishing_rollback", "db:reverting"
-
-end
-
 namespace :drupal do
 
   desc 'update drupal: download make files, build and make backup again'
   task :updated do
-    invoke 'drupal:launch_make_file'
+    invoke 'drupal:search_make_files'
     invoke 'drupal:build'
     invoke 'db:backup'
   end
@@ -43,17 +10,17 @@ namespace :drupal do
 
   desc 'Revert proccess '
   task :reverted do
-    invoke 'drupal:reverted_database'
+    invoke 'db:reverting'
   end
 
   desc 'Launch drush make processes if exists a make file'
-  task :launch_make_file do
+  task :search_make_files do
     on release_roles :all do
-      within release_path do
-        drush_make_file_path = release_path.join( fetch(:drush_make_file))
+      within release_path.join(fetch(:docroot))do
+        drush_make_file_path = release_path.join(fetch(:drush_make_file))
+        drush_make_contrib_destination = release_path.join(fetch(:drush_make_contrib_destination))
         if test "[ -f #{drush_make_file_path} ]"
-          drush_make_contrib_destination  = fetch(:drush_make_contrib_destination, ".")
-          execute :drush, "make --no-core", drush_make_file_path,  "--contrib-destination=#{drush_make_contrib_destination} --force-complete -y"
+          execute :drush, "make --no-core", drush_make_file_path,  "--contrib-destination=#{fetch(:drush_make_contrib_destination, ".")} --force-complete -y"
         end
       end
     end
@@ -62,7 +29,7 @@ namespace :drupal do
   task :build do
     on release_roles(:all) do
       if test "[ -f #{current_path} ]"
-        within release_path.join('docroot') do
+        within release_path.join(fetch(:docroot)) do
           execute :drush, 'updb -y'
           execute :drush, 'fra -y --force'
           execute :drush, 'cc all'

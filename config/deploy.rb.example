@@ -1,0 +1,102 @@
+set :application, 'drupal7'
+
+#set :repo_url, ''
+set :repo_url, 'git@github.com:mordonez/drupal7.git'
+
+# set :default_env, { path: "/opt/ruby/bin:$PATH" }
+
+#
+# Relative path to drupal's document root, leave empty if it's the same of git root folder.
+#
+set :docroot, 'docroot'
+
+#
+# Relative path to default settings.php.
+#
+#set :linked_files_settings, "sites/default/settings.php"
+set :linked_files_settings, "docroot/sites/default/settings.php"
+
+#
+# Relative path to the robots.txt.
+#
+#set :linked_files_robots, "robots.txt"
+set :linked_files_robots, "docroot/robots.txt"
+
+#
+# Relative path to main .htaccess file.
+#
+#set :linked_files_htaccess, ".htaccess"
+set :linked_files_htaccess, "docroot/.htaccess"
+
+#
+# Relative path to drupal files folder
+#
+#set :linked_dirs_files, "sites/default/files"
+set :linked_dirs_files, "docroot/sites/default/files"
+
+#
+# Relative path to drupal private folder
+#
+#set :linked_dirs_private, "sites/default/private"
+set :linked_dirs_private, "docroot/sites/default/private"
+
+# Set the defaults shared dirs/files.
+set :linked_files, [fetch(:linked_files_settings), fetch(:linked_files_robots), fetch(:linked_files_htaccess)]
+set :linked_dirs, [fetch(:linked_dirs_files), fetch(:linked_dirs_private)]
+
+#
+# Number of revisions.
+#
+set :keep_releases, 5
+
+#
+# Specify a  path to the drush make file, leave empty if not used
+#
+#set :drush_make_file, ''
+set :drush_make_file, 'docroot/profiles/web/web.make'
+
+#
+# Specify a path under which modules  and themes should be placed.
+# defaults to sites/all for Drupal 6,7 and the corresponding directory in
+# the Drupal root for Drupal 8 and above. (Depends of :drush_make_file)
+# Leave empty if not used
+#
+#set :drush_make_contrib_destination, ''
+set :drush_make_contrib_destination, 'docroot/profiles/web'
+
+# absolute path where deploys.
+set :deploy_to, '/srv/www'
+
+#
+# Specify the drupal's version
+#
+#set :drupal_version, '8'
+set :drupal_version, '7'
+
+#
+#  Remote file task  to install the shared files in first deploy
+#
+#
+namespace :deploy do
+  namespace :check do
+    task :linked_files => fetch(:linked_files_settings)
+    task :linked_files => fetch(:linked_files_htaccess)
+    task :linked_files => fetch(:linked_files_robots)
+  end
+end
+
+remote_file fetch(:linked_files_settings)=> '/tmp/settings.php', roles: :app
+remote_file fetch(:linked_files_htaccess)=> '/tmp/.htaccess', roles: :app
+remote_file fetch(:linked_files_robots) => '/tmp/robots.txt', roles: :app
+
+file '/tmp/settings.php' do |t|
+  sh "curl -o #{t.name} http://drupalcode.org/project/drupal.git/blob_plain/refs/heads/#{fetch(:drupal_version)}.x:/sites/default/default.settings.php"
+end
+
+file '/tmp/.htaccess' do |t|
+  sh "curl -o #{t.name} http://drupalcode.org/project/drupal.git/blob_plain/refs/heads/#{fetch(:drupal_version)}.x:/.htaccess"
+end
+
+file '/tmp/robots.txt' do |t|
+  sh "curl -o #{t.name} http://drupalcode.org/project/drupal.git/blob_plain/refs/heads/#{fetch(:drupal_version)}.x:/robots.txt"
+end

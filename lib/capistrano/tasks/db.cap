@@ -1,0 +1,33 @@
+
+namespace :db do
+
+  task :backup do
+    on release_roles(:all) do
+      if test "[ -f #{current_path} ]"
+        within current_path.join(fetch(:docroot)) do
+          filename = current_path.join('backup.sql')
+          execute :drush, 'sql-dump >', filename
+        end
+      end
+    end
+  end
+
+  before 'deploy:started', 'db:backup'
+
+  task :reverting do
+    on release_roles(:all) do
+      filename = current_path.join('backup.sql')
+      # FIXME: It's necessary make two  within processes to drop and import the database successfully
+      if test "[ -f #{filename} ]"
+        within current_path.join(fetch(:docroot)) do
+          execute :drush, 'sql-drop -y'
+        end
+        within current_path.join(fetch(:docroot)) do
+          execute :drush, 'sql-cli <', filename
+        end
+      end
+    end
+  end
+  after "deploy:finishing_rollback", "db:reverting"
+
+end
