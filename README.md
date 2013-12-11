@@ -18,3 +18,6 @@ $ cp ./config/deploy/staging.rb.example ./config/deploy/staging.rb
 $ cap staging deploy
 `````
 
+## Authentication & Authorisation
+
+Add your [Authentication & Authorisation](http://www.capistranorb.com/documentation/getting-started/authentication-and-authorisation/) config for deploy users.
