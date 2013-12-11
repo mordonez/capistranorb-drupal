@@ -3,7 +3,7 @@ namespace :drupal do
   desc 'update drupal: download make files, build and make backup again'
   task :updated do
     invoke 'drupal:search_make_files'
-    #invoke 'drupal:build'
+    invoke 'drupal:build'
     invoke 'db:backup'
   end
   after 'deploy:updated', 'drupal:updated'
