@@ -17,6 +17,7 @@ $ git clone https://github.com/mordonez/capistranorb-drupal.git
 $ cd capistranorb-drupal
 $ cp ./config/deploy.rb.example ./config/deploy.rb
 $ cp ./config/deploy/staging.rb.example ./config/deploy/staging.rb
+// customize your staging.rb and deploy.rb
 $ cap staging deploy
 `````
 
