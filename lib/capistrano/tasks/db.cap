@@ -1,6 +1,6 @@
-
 namespace :db do
 
+  desc 'Backup the current database'
   task :backup do
     on release_roles(:all) do
       if test "[ -d #{current_path} ]"
@@ -11,9 +11,9 @@ namespace :db do
       end
     end
   end
-
   before 'deploy:started', 'db:backup'
 
+  desc 'Restore the current database'
   task :reverting do
     on release_roles(:all) do
       filename = current_path.join('backup.sql')

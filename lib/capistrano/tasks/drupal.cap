@@ -3,7 +3,7 @@ namespace :drupal do
   desc 'update drupal: download make files, build and make backup again'
   task :updated do
     invoke 'drupal:search_make_files'
-    invoke 'drupal:build'
+    #invoke 'drupal:build'
     invoke 'db:backup'
   end
   after 'deploy:updated', 'drupal:updated'
@@ -16,10 +16,54 @@ namespace :drupal do
   desc 'Launch drush make processes if exists a make file'
   task :search_make_files do
     on release_roles :all do
-      within release_path.join(fetch(:docroot))do
-        make_file = release_path.join(fetch(:drush_make_file))
-        if test "[ -f #{make_file} ]"
-          execute :drush, "make --no-core", make_file,  "--contrib-destination=#{fetch(:drush_make_contrib_destination, "sites/all")} --force-complete -y"
+      if fetch(:drupal_make)
+        within release_path do
+          make_file = release_path.join(fetch(:drupal_make_file))
+          if test "[ -f #{make_file} ]"
+            args = "--contrib-destination=#{fetch(:drupal_make_contrib_dir)} --force-complete -y"
+            if  test fetch(:drupal_make_nocore)
+              # Assumed  the project  contains a drupal core and a make file inside.
+              args = args + ' --no-core'
+              within fetch(:docroot) do
+                execute :drush, "make", make_file, args
+              end
+            else
+              # Assumed  the project only contains a drupal install profile.
+              # needs to clear the project files, mantain the make files,
+              # launch the drush make to build the installation profile
+              # and again make the symbolic  link of shared files/dirs
+
+              # Clean the release path except make files
+              execute :find, " .  -not -name '*.make' -delete"
+              # Execute de drush make
+              execute :drush, "make", make_file, args, fetch(:docroot)
+              # Execute manually symbolic links process
+              # Not possible to launch again 'deploy:symlink:linked_files'  'deploy:symlink:linked_dirs'
+              execute :mkdir, '-pv', linked_file_dirs(release_path)
+              fetch(:linked_files).each do |file|
+                target = release_path.join(file)
+                source = shared_path.join(file)
+                unless test "[ -L #{target} ]"
+                  if test "[ -f #{target} ]"
+                    execute :rm, target
+                  end
+                  execute :ln, '-s', source, target
+                end
+              end
+              execute :mkdir, '-pv', linked_dir_parents(release_path)
+              fetch(:linked_dirs).each do |dir|
+                target = release_path.join(dir)
+                source = shared_path.join(dir)
+                unless test "[ -L #{target} ]"
+                  if test "[ -d #{target} ]"
+                    execute :rm, '-rf', target
+                  end
+                  execute :ln, '-s', source, target
+                end
+              end
+
+            end
+          end
         end
       end
     end
