@@ -7,6 +7,8 @@ A Capistrano 3 recipe to deploy drupal projects.
 
 * Ruby >= 1.9 (JRuby and C-Ruby/YARV are supported)
 * [Capistrano 3](http://www.capistranorb.com/documentation/getting-started/installation/) (gem install capistrano)
+* [Drush](https://github.com/drush-ops/drush)
+* [Authentication & Authorisation](http://www.capistranorb.com/documentation/getting-started/authentication-and-authorisation/) for capistrano deployments
 
 ## Usage
 
